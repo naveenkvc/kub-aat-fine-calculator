@@ -1028,8 +1028,7 @@
     </style>
 </head>
 <body>
-    <!-- Hidden logo image for PDF extraction -->
-    <img id="universityLogo" src="logo.png" style="display: none;">
+
 
     <!-- Glowing ambient structures -->
     <div class="glow-sphere glow-sphere-1"></div>
@@ -1040,9 +1039,6 @@
         <!-- Header -->
         <header>
             <div class="logo-container">
-                <div class="logo-icon-wrapper">
-                    <img src="logo.png" alt="Kishkinda University Logo" style="width: 100%; height: 100%; object-fit: contain;">
-                </div>
                 <div class="header-titles">
                     <h1>Kishkinda University</h1>
                     <p>Students Portal</p>
@@ -1953,46 +1949,21 @@
             doc.setFillColor(15, 34, 68);
             doc.rect(0, 0, 210, 8, 'F');
 
-            // 2. University Letterhead Header
-            const logoImg = document.getElementById('universityLogo');
-            const hasLogo = logoImg && logoImg.complete && logoImg.naturalWidth !== 0;
+            // 2. Centered University Letterhead Header
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(22);
+            doc.setTextColor(15, 34, 68); // Dark Navy Blue
+            doc.text("KISHKINDA UNIVERSITY", 105, 23, { align: "center" });
 
-            if (hasLogo) {
-                // Render crest on the left
-                doc.addImage(logoImg, 'PNG', 15, 12, 18, 20); // 18x20mm
-                
-                // Left aligned titles
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(21);
-                doc.setTextColor(15, 34, 68); // Dark Navy Blue
-                doc.text("KISHKINDA UNIVERSITY", 37, 21);
-
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(8.5);
-                doc.setTextColor(107, 114, 128); // Muted grey
-                doc.text("Approved by AICTE | UGC Recognized | Accredited by NAAC", 37, 26);
-                
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(11.5);
-                doc.setTextColor(191, 149, 13); // Accent Crest Gold
-                doc.text("ATTENDANCE EVALUATION & FINE REPORT", 37, 33);
-            } else {
-                // Centered fallback if logo fails to load
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(22);
-                doc.setTextColor(15, 34, 68); // Dark Navy Blue
-                doc.text("KISHKINDA UNIVERSITY", 105, 23, { align: "center" });
-
-                doc.setFont("helvetica", "normal");
-                doc.setFontSize(9);
-                doc.setTextColor(107, 114, 128); // Muted gray
-                doc.text("Approved by AICTE | UGC Recognized | Accredited by NAAC", 105, 28, { align: "center" });
-                
-                doc.setFont("helvetica", "bold");
-                doc.setFontSize(13);
-                doc.setTextColor(191, 149, 13); // Accent Crest Gold
-                doc.text("ATTENDANCE EVALUATION & FINE REPORT", 105, 36, { align: "center" });
-            }
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9);
+            doc.setTextColor(107, 114, 128); // Muted gray
+            doc.text("Approved by AICTE | UGC Recognized | Accredited by NAAC", 105, 28, { align: "center" });
+            
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(13);
+            doc.setTextColor(191, 149, 13); // Accent Crest Gold
+            doc.text("ATTENDANCE EVALUATION & FINE REPORT", 105, 36, { align: "center" });
 
             // Horizontal Separator Line
             doc.setDrawColor(209, 213, 219);
