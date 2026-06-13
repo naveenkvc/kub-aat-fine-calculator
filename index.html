@@ -1190,11 +1190,11 @@
                                 <span class="rule-fine">₹500</span>
                             </li>
                             <li class="rule-item">
-                                <span class="rule-range"><span class="rule-dot dot-high"></span>Attendance &gt; 50% to &lt; 60%</span>
+                                <span class="rule-range"><span class="rule-dot dot-high"></span>Attendance &ge; 50% to &lt; 60%</span>
                                 <span class="rule-fine">₹600</span>
                             </li>
                             <li class="rule-item">
-                                <span class="rule-range"><span class="rule-dot dot-high"></span>Attendance &le; 50%</span>
+                                <span class="rule-range"><span class="rule-dot dot-high"></span>Attendance &lt; 50%</span>
                                 <span class="rule-fine fine-has">₹750</span>
                             </li>
                         </ul>
@@ -1360,7 +1360,7 @@
             if (attendance >= 70) return 300;
             if (attendance >= 65) return 400;
             if (attendance >= 60) return 500;
-            if (attendance > 50 && attendance < 60) return 600;
+            if (attendance >= 50) return 600;
             return 750;
         }
 
