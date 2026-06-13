@@ -1390,15 +1390,14 @@
                 return;
             }
             
-            const details = subjectsList.map(s => `${s.name} (${s.attendance}%: ₹${s.fine})`).join(', ');
-            
             const payload = {
-                name: name,
-                usn: usn,
-                semester: semester,
-                branch: branch,
+                name: `${name} (${usn}, Sem ${semester}, ${branch})`,
                 totalFine: totalFine,
-                details: details
+                subjects: subjectsList.map(s => ({
+                    name: s.name,
+                    attendance: s.attendance,
+                    fine: s.fine
+                }))
             };
             
             fetch(GOOGLE_SHEETS_LOG_URL, {
