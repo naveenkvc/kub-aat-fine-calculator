@@ -1392,12 +1392,10 @@
             
             const payload = {
                 name: `${name} (${usn}, Sem ${semester}, ${branch})`,
-                totalFine: totalFine,
-                subjects: subjectsList.map(s => ({
-                    name: s.name,
-                    attendance: s.attendance,
-                    fine: s.fine
-                }))
+                subjectsName: subjectsList.map(s => s.name).join(', '),
+                aatPercentage: subjectsList.map(s => s.attendance + '%').join(', '),
+                fine: subjectsList.map(s => '₹' + s.fine).join(', '),
+                totalFine: '₹' + totalFine
             };
             
             fetch(GOOGLE_SHEETS_LOG_URL, {
