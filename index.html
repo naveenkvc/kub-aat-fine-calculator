@@ -1391,7 +1391,10 @@
             }
             
             const payload = {
-                name: `${name} (${usn}, Sem ${semester}, ${branch})`,
+                name: name,
+                usn: usn,
+                semester: semester,
+                branch: branch,
                 totalFine: '₹' + totalFine,
                 subjects: {}
             };
