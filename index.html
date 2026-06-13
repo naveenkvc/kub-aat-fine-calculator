@@ -1,0 +1,2136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kishkinda University Students Portal - Attendance Fine Calculator</title>
+    
+    <!-- Google Fonts: Outfit (Header) and Inter (Body) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <!-- jsPDF and jsPDF AutoTable plugins -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+    <style>
+        :root {
+            /* Themed Brand Gradients (matching the logo's sunset book icon) */
+            --sunset-gradient: linear-gradient(135deg, #2563eb 0%, #f59e0b 55%, #ef4444 100%);
+            --sunset-hover: linear-gradient(135deg, #1d4ed8 0%, #d97706 55%, #dc2626 100%);
+
+            /* Light Mode - Crest Navy & Gold Theme */
+            --bg-gradient: linear-gradient(135deg, #f3f6fa 0%, #e2e8f0 50%, #fffdf4 100%);
+            --glow-1: rgba(37, 99, 235, 0.12); /* Sunset Blue Glow */
+            --glow-2: rgba(245, 158, 11, 0.15); /* Crest Gold Glow */
+            --glass-bg: rgba(255, 255, 255, 0.55);
+            --glass-border: rgba(255, 255, 255, 0.7);
+            --card-shadow: 0 10px 40px -10px rgba(15, 34, 68, 0.08), 0 1px 3px rgba(0, 0, 0, 0.03);
+            
+            --text-primary: #0a1c3e; /* Navy */
+            --text-secondary: #2563eb; /* Active Blue */
+            --text-muted: #627893;
+            --card-title: #0a1c3e;
+            
+            --input-bg: rgba(255, 255, 255, 0.8);
+            --input-border: rgba(37, 99, 235, 0.2);
+            --input-focus: #2563eb;
+            
+            /* Status Indicators */
+            --clr-success: #10b981;
+            --clr-info: #3b82f6;
+            --clr-warning: #f59e0b;
+            --clr-danger: #ef4444;
+            
+            --primary-gradient: var(--sunset-gradient);
+            --primary-hover: var(--sunset-hover);
+            --btn-text: #ffffff;
+            
+            --rules-bg: rgba(255, 255, 255, 0.5);
+            --rules-border: rgba(37, 99, 235, 0.1);
+            --table-border: rgba(229, 231, 235, 0.8);
+            --table-row-alt: rgba(249, 250, 251, 0.4);
+            
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .dark {
+            /* Dark Mode - Kishkinda Emblem Palette */
+            --bg-gradient: linear-gradient(135deg, #040a15 0%, #07152c 50%, #0d2347 100%);
+            --glow-1: rgba(37, 99, 235, 0.08);
+            --glow-2: rgba(245, 158, 11, 0.12);
+            --glass-bg: rgba(7, 21, 44, 0.75);
+            --glass-border: rgba(242, 193, 46, 0.1); /* Gold tinted card borders */
+            --card-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(255, 255, 255, 0.01);
+            
+            --text-primary: #f8fafc;
+            --text-secondary: #f2c12e; /* Gold Accent */
+            --text-muted: #889bb5;
+            --card-title: #f2c12e; /* Gold Headings */
+            
+            --input-bg: rgba(4, 10, 21, 0.8);
+            --input-border: rgba(242, 193, 46, 0.18);
+            --input-focus: #f2c12e;
+            
+            --primary-gradient: var(--sunset-gradient);
+            --primary-hover: var(--sunset-hover);
+            --btn-text: #ffffff;
+            
+            --rules-bg: rgba(7, 21, 44, 0.4);
+            --rules-border: rgba(242, 193, 46, 0.06);
+            --table-border: rgba(255, 255, 255, 0.08);
+            --table-row-alt: rgba(255, 255, 255, 0.02);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            overflow-x: hidden;
+            position: relative;
+            transition: var(--transition);
+        }
+
+        /* Decorative glowing spheres */
+        .glow-sphere {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            pointer-events: none;
+            z-index: 0;
+            animation: floatGlow 15s ease-in-out infinite;
+        }
+
+        .glow-sphere-1 {
+            top: 10%;
+            left: 5%;
+            width: 450px;
+            height: 450px;
+            background: var(--glow-1);
+        }
+
+        .glow-sphere-2 {
+            bottom: 15%;
+            right: 5%;
+            width: 500px;
+            height: 500px;
+            background: var(--glow-2);
+            animation-delay: -5s;
+        }
+
+        @keyframes floatGlow {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-40px) scale(1.1); }
+        }
+
+        .app-container {
+            max-width: 1280px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem;
+            z-index: 10;
+            position: relative;
+            flex-grow: 1;
+        }
+
+        /* Header Style */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 3rem;
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .logo-container {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .logo-icon-wrapper {
+            background: #ffffff; /* White background to make the navy blue shield logo stand out */
+            width: 54px;
+            height: 54px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(15, 34, 68, 0.15);
+            border: 2px solid var(--text-secondary); /* Dynamic themed border */
+            overflow: hidden;
+            padding: 3px;
+            transition: var(--transition);
+        }
+
+        .dark .logo-icon-wrapper {
+            background: #ffffff;
+            border: 2px solid var(--text-secondary);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Edit button on cards */
+        .edit-subject-btn {
+            background: rgba(242, 193, 46, 0.1);
+            border: none;
+            color: var(--text-secondary);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .edit-subject-btn:hover {
+            background: var(--text-secondary);
+            color: var(--btn-text);
+            transform: scale(1.1);
+        }
+
+        .header-titles h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, #0f2244 0%, #1e3e70 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .dark .header-titles h1 {
+            background: linear-gradient(135deg, #f8fafc 0%, #f2c12e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-titles p {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Theme Switcher */
+        .theme-toggle-btn {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            padding: 0.75rem;
+            border-radius: 12px;
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: var(--card-shadow);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            transition: var(--transition);
+        }
+
+        .theme-toggle-btn:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(242, 193, 46, 0.15);
+            border-color: var(--input-focus);
+        }
+
+        .theme-toggle-btn i {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* Main Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1.5fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Glass Cards */
+        .glass-card {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            backdrop-filter: blur(16px) saturate(180%);
+            -webkit-backdrop-filter: blur(16px) saturate(180%);
+            border-radius: var(--radius-lg);
+            padding: 2rem;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            animation: fadeInUp 0.8s ease-out;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-card:hover {
+            box-shadow: 0 20px 45px -15px rgba(15, 34, 68, 0.15), var(--glass-border);
+        }
+
+        .card-header-icon {
+            display: inline-flex;
+            padding: 0.6rem;
+            border-radius: 10px;
+            background: rgba(15, 34, 68, 0.08);
+            color: var(--text-secondary);
+            margin-bottom: 1rem;
+        }
+
+        .dark .card-header-icon {
+            background: rgba(242, 193, 46, 0.1);
+        }
+
+        .glass-card h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--card-title);
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        /* Form Controls */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.25rem;
+        }
+
+        @media (max-width: 640px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .form-group label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            opacity: 0.9;
+        }
+
+        .input-wrapper {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 1rem;
+            color: var(--text-muted);
+            width: 18px;
+            height: 18px;
+            pointer-events: none;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.85rem 1rem 0.85rem 2.75rem;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(242, 193, 46, 0.15);
+            background: var(--glass-bg);
+        }
+
+        select.form-input {
+            appearance: none;
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%230f2244' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+            background-repeat: no-repeat;
+            background-position: right 1rem center;
+            background-size: 1.2em;
+            padding-right: 2.5rem;
+        }
+
+        .dark select.form-input {
+            background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23f2c12e' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'></polyline></svg>");
+        }
+
+        /* Subjects Section */
+        .section-title-desc {
+            margin-top: -1rem;
+            margin-bottom: 2rem;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .subjects-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        /* Subject Cards */
+        .subject-card {
+            background: var(--input-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            transition: var(--transition);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            position: relative;
+        }
+
+        .subject-card:hover {
+            transform: translateX(4px);
+            border-color: var(--input-focus);
+            box-shadow: 0 4px 15px rgba(242, 193, 46, 0.05);
+        }
+
+        .subject-info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .subject-name-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            flex-grow: 1;
+        }
+
+        .subject-icon {
+            background: rgba(15, 34, 68, 0.08);
+            color: var(--text-secondary);
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .dark .subject-icon {
+            background: rgba(242, 193, 46, 0.1);
+        }
+
+        .subject-name {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 600;
+            color: var(--text-primary);
+            font-size: 1.05rem;
+        }
+
+        .subject-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 0.25rem 0.6rem;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-excellent { background: rgba(16, 185, 129, 0.15); color: var(--clr-success); }
+        .badge-warning { background: rgba(245, 158, 11, 0.15); color: var(--clr-warning); }
+        .badge-critical { background: rgba(239, 68, 68, 0.15); color: var(--clr-danger); }
+
+        .subject-input-control {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .slider-wrapper {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .range-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 5px;
+            background: rgba(156, 163, 175, 0.2);
+            outline: none;
+            transition: var(--transition);
+        }
+
+        .range-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: var(--transition);
+        }
+
+        .dark .range-slider::-webkit-slider-thumb {
+            border: 2px solid var(--btn-text);
+        }
+
+        .range-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .range-slider::-moz-range-thumb {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-gradient);
+            cursor: pointer;
+            border: 2px solid #ffffff;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: var(--transition);
+        }
+
+        .range-slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .numeric-input-box {
+            position: relative;
+            width: 100px;
+            flex-shrink: 0;
+        }
+
+        .numeric-input {
+            width: 100%;
+            padding: 0.5rem 1.8rem 0.5rem 0.75rem;
+            border-radius: 8px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-family: 'Inter', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            text-align: center;
+            transition: var(--transition);
+        }
+
+        .numeric-input:focus {
+            outline: none;
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 2px rgba(242, 193, 46, 0.15);
+        }
+
+        .numeric-input-box::after {
+            content: '%';
+            position: absolute;
+            right: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            font-weight: 600;
+            pointer-events: none;
+        }
+
+        /* Delete subject button */
+        .delete-subject-btn {
+            background: rgba(239, 68, 68, 0.1);
+            border: none;
+            color: var(--clr-danger);
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+            flex-shrink: 0;
+        }
+
+        .delete-subject-btn:hover {
+            background: var(--clr-danger);
+            color: #ffffff;
+            transform: scale(1.1);
+        }
+
+        /* Live Progress Bar indicator */
+        .live-progress-bar-container {
+            width: 100%;
+            height: 4px;
+            background: rgba(156, 163, 175, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .live-progress-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 2px;
+            transition: width 0.3s ease, background-color 0.3s ease;
+        }
+
+        /* Subject Fine Tag */
+        .subject-fine-tag {
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+        }
+
+        .fine-zero { color: var(--clr-success); }
+        .fine-has { color: var(--clr-danger); }
+
+        /* Validation warning */
+        .validation-warning {
+            font-size: 0.75rem;
+            color: var(--clr-danger);
+            font-weight: 500;
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        /* Right Column Side Panel Grid */
+        .side-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        /* Rules Information Card */
+        .rules-card {
+            background: var(--rules-bg);
+            border: 1px solid var(--rules-border);
+        }
+
+        .rules-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .rule-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            border-bottom: 1px dashed var(--table-border);
+        }
+
+        .rule-item:last-child {
+            border-bottom: none;
+        }
+
+        .rule-range {
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .rule-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .dot-zero { background-color: var(--clr-success); }
+        .dot-low { background-color: var(--clr-info); }
+        .dot-mid { background-color: var(--clr-warning); }
+        .dot-high { background-color: var(--clr-danger); }
+
+        .rule-fine {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        /* Action Buttons */
+        .actions-card {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 1rem;
+            border-radius: var(--radius-md);
+            font-family: 'Outfit', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            transition: var(--transition);
+        }
+
+        .btn-primary {
+            background: var(--primary-gradient);
+            color: var(--btn-text);
+            box-shadow: 0 8px 25px rgba(15, 34, 68, 0.2);
+        }
+
+        .dark .btn-primary {
+            box-shadow: 0 8px 25px rgba(242, 193, 46, 0.2);
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(15, 34, 68, 0.35);
+        }
+
+        .dark .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 12px 30px rgba(242, 193, 46, 0.35);
+        }
+
+        .btn-primary:active:not(:disabled) {
+            transform: translateY(1px);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .btn-secondary {
+            background: var(--glass-bg);
+            color: var(--text-primary);
+            border: 1px solid var(--glass-border);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(242, 193, 46, 0.05);
+            transform: translateY(-2px);
+            border-color: var(--input-focus);
+        }
+
+        .btn-secondary:active {
+            transform: translateY(1px);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: #ffffff;
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            display: none;
+            animation: pulseFadeIn 0.5s ease-out;
+        }
+
+        .btn-download:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 30px rgba(16, 185, 129, 0.4);
+        }
+
+        .btn-download:active {
+            transform: translateY(1px);
+        }
+
+        @keyframes pulseFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Results Display Section */
+        .results-section {
+            margin-top: 2rem;
+            display: none;
+            animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .results-wrapper {
+            display: grid;
+            grid-template-columns: 1.3fr 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .results-wrapper {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .total-fine-card {
+            background: linear-gradient(135deg, rgba(15, 34, 68, 0.05) 0%, rgba(30, 60, 110, 0.05) 100%);
+            border: 2px solid var(--input-focus);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 2.5rem;
+            position: relative;
+            border-radius: var(--radius-lg);
+        }
+
+        .total-fine-card.has-fine {
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.08) 0%, rgba(220, 38, 38, 0.05) 100%);
+            border-color: var(--clr-danger);
+        }
+
+        .total-fine-card.no-fine {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(5, 150, 105, 0.05) 100%);
+            border-color: var(--clr-success);
+        }
+
+        .total-fine-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.5rem;
+        }
+
+        .total-fine-amount {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 800;
+            background: var(--primary-gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .total-fine-card.has-fine .total-fine-amount {
+            background: linear-gradient(135deg, #ef4444 0%, #b91c1c 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .total-fine-card.no-fine .total-fine-amount {
+            background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .total-fine-status {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        /* Results Table Layout */
+        .results-table-container {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: var(--radius-md);
+            border: 1px solid var(--table-border);
+            margin-top: 1rem;
+        }
+
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.95rem;
+        }
+
+        .results-table th {
+            background: rgba(15, 34, 68, 0.05);
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--text-primary);
+            padding: 1rem;
+            border-bottom: 2px solid var(--table-border);
+        }
+
+        .dark .results-table th {
+            background: rgba(242, 193, 46, 0.05);
+        }
+
+        .results-table td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--table-border);
+            font-weight: 500;
+        }
+
+        .results-table tbody tr:nth-child(even) {
+            background-color: var(--table-row-alt);
+        }
+
+        .results-table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .results-table tfoot td {
+            padding: 0.75rem 1rem;
+            border-bottom: none;
+        }
+
+        .table-fine-amount {
+            font-weight: 700;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 4rem;
+            padding: 1.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            border-top: 1px solid var(--glass-border);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInUp 0.8s ease-out;
+        }
+
+        footer strong {
+            color: var(--text-primary);
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hidden logo image for PDF extraction -->
+    <img id="universityLogo" src="logo.png" style="display: none;">
+
+    <!-- Glowing ambient structures -->
+    <div class="glow-sphere glow-sphere-1"></div>
+    <div class="glow-sphere glow-sphere-2"></div>
+
+    <div class="app-container">
+        
+        <!-- Header -->
+        <header>
+            <div class="logo-container">
+                <div class="logo-icon-wrapper">
+                    <img src="logo.png" alt="Kishkinda University Logo" style="width: 100%; height: 100%; object-fit: contain;">
+                </div>
+                <div class="header-titles">
+                    <h1>Kishkinda University</h1>
+                    <p>Students Portal</p>
+                </div>
+            </div>
+            
+            <button class="theme-toggle-btn" id="themeToggle" title="Toggle Light/Dark Mode" aria-label="Toggle Light/Dark Mode">
+                <i data-lucide="moon" id="themeIcon"></i>
+            </button>
+        </header>
+
+        <!-- Main Dashboard -->
+        <main>
+            <div class="dashboard-grid">
+                
+                <!-- Left Column (Inputs) -->
+                <div style="display: flex; flex-direction: column; gap: 2rem;">
+                    
+                    <!-- Student Details Card -->
+                    <div class="glass-card">
+                        <h2>
+                            <span class="card-header-icon"><i data-lucide="user"></i></span>
+                            Student Details
+                        </h2>
+                        
+                        <form id="studentForm" autocomplete="off" onsubmit="event.preventDefault();">
+                            <div class="form-grid">
+                                <div class="form-group">
+                                    <label for="studentName">Student Name</label>
+                                    <div class="input-wrapper">
+                                        <i data-lucide="user-check"></i>
+                                        <input type="text" id="studentName" class="form-input" placeholder="Enter Full Name" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="studentUsn">USN</label>
+                                    <div class="input-wrapper">
+                                        <i data-lucide="id-card"></i>
+                                        <input type="text" id="studentUsn" class="form-input" placeholder="Enter USN (e.g., 3KU22CS001)" required>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="studentSemester">Semester</label>
+                                    <div class="input-wrapper">
+                                        <i data-lucide="book-open"></i>
+                                        <select id="studentSemester" class="form-input" required>
+                                            <option value="" disabled selected>Select Semester</option>
+                                            <option value="1">1st Semester</option>
+                                            <option value="2">2nd Semester</option>
+                                            <option value="3">3rd Semester</option>
+                                            <option value="4">4th Semester</option>
+                                            <option value="5">5th Semester</option>
+                                            <option value="6">6th Semester</option>
+                                            <option value="7">7th Semester</option>
+                                            <option value="8">8th Semester</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label for="studentBranch">Branch</label>
+                                    <div class="input-wrapper">
+                                        <i data-lucide="git-branch"></i>
+                                        <select id="studentBranch" class="form-input" required>
+                                            <option value="" disabled selected>Select Branch</option>
+                                            <option value="Computer Science & Engineering">Computer Science & Engineering</option>
+                                            <option value="Information Science & Engineering">Information Science & Engineering</option>
+                                            <option value="Electronics & Communication Engineering">Electronics & Communication Engineering</option>
+                                            <option value="Artificial Intelligence & Machine Learning">Artificial Intelligence & Machine Learning</option>
+                                            <option value="Data Science">Data Science</option>
+                                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                            <option value="Electrical & Electronics Engineering">Electrical & Electronics Engineering</option>
+                                            <option value="Civil Engineering">Civil Engineering</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Attendance Input Card -->
+                    <div class="glass-card">
+                        <h2>
+                            <span class="card-header-icon"><i data-lucide="calendar-check"></i></span>
+                            Subject Attendance Input
+                        </h2>
+                        
+                        <p class="section-title-desc" style="margin-top: 0.5rem;">Adjust attendance using the range slider or enter a percentage directly (0 to 100).</p>
+                        
+                        <div class="subjects-container" id="subjectsContainer">
+                            <!-- Subjects rendered here -->
+                        </div>
+
+                        <!-- Add Custom Subject Form (Hidden initially) -->
+                        <div id="addSubjectForm" style="display: none; margin-top: 1.5rem; padding: 1.25rem; border: 1px dashed var(--input-border); border-radius: var(--radius-md); background: rgba(15, 34, 68, 0.03); animation: pulseFadeIn 0.3s ease-out;">
+                            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                <div class="form-group">
+                                    <label for="newSubjectName">Subject Name</label>
+                                    <input type="text" id="newSubjectName" class="form-input" placeholder="e.g., Advanced Java Programming" style="padding-left: 1rem;">
+                                </div>
+                                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                                    <button type="button" class="btn btn-secondary" id="cancelSubjectBtn" style="padding: 0.5rem 1rem; width: auto; font-size: 0.9rem;">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="saveSubjectBtn" style="padding: 0.5rem 1.25rem; width: auto; font-size: 0.9rem;">Add Subject</button>
+                                </div>
+                                <div id="subjectError" class="validation-warning" style="margin-top: 0;">Please enter a subject name.</div>
+                            </div>
+                        </div>
+
+                        <!-- Add Subject button (placed at the bottom of the subject list) -->
+                        <div style="display: flex; justify-content: center; margin-top: 1.5rem;">
+                            <button type="button" class="btn btn-secondary" id="showAddSubjectBtn" style="padding: 0.6rem 1.25rem; font-size: 0.9rem; width: auto; border-radius: 8px;">
+                                <i data-lucide="plus" style="width: 16px; height:16px;"></i> Add Subject
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column (Rules, Discounts, Actions) -->
+                <div class="side-panel">
+                    
+                    <!-- Fine Rules Card -->
+                    <div class="glass-card rules-card">
+                        <h2>
+                            <span class="card-header-icon"><i data-lucide="info"></i></span>
+                            Attendance Fine Rules
+                        </h2>
+                        <ul class="rules-list">
+                            <li class="rule-item">
+                                <span class="rule-range"><span class="rule-dot dot-zero"></span>Attendance &ge; 85%</span>
+                                <span class="rule-fine fine-zero">₹0</span>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-range"><span class="rule-dot dot-low"></span>Attendance &ge; 80%</span>
+                                <span class="rule-fine">₹100</span>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-range"><span class="rule-dot dot-low"></span>Attendance &ge; 75%</span>
+                                <span class="rule-fine">₹200</span>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-range"><span class="rule-dot dot-mid"></span>Attendance &ge; 70%</span>
+                                <span class="rule-fine">₹300</span>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-range"><span class="rule-dot dot-mid"></span>Attendance &ge; 65%</span>
+                                <span class="rule-fine">₹400</span>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-range"><span class="rule-dot dot-high"></span>Attendance &ge; 60%</span>
+                                <span class="rule-fine">₹500</span>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-range"><span class="rule-dot dot-high"></span>Attendance &gt; 50% to &lt; 60%</span>
+                                <span class="rule-fine">₹600</span>
+                            </li>
+                            <li class="rule-item">
+                                <span class="rule-range"><span class="rule-dot dot-high"></span>Attendance &le; 50%</span>
+                                <span class="rule-fine fine-has">₹750</span>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Discount Configuration Card -->
+                    <div class="glass-card">
+                        <h2>
+                            <span class="card-header-icon"><i data-lucide="percent"></i></span>
+                            Discount Settings
+                        </h2>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; font-weight: 600;">
+                                <input type="checkbox" id="enableDiscount" style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--input-focus);">
+                                <span>Apply Fine Discount</span>
+                            </label>
+                        </div>
+                        
+                        <div id="discountInputs" style="display: none; flex-direction: column; gap: 1rem; margin-top: 1.25rem; animation: pulseFadeIn 0.3s ease-out;">
+                            <div class="form-grid" style="grid-template-columns: 1.2fr 1fr; gap: 1rem;">
+                                <div class="form-group">
+                                    <label for="discountType">Discount Type</label>
+                                    <select id="discountType" class="form-input" style="padding-left: 1rem;">
+                                        <option value="percentage">Percentage (%)</option>
+                                        <option value="flat">Flat Amount (₹)</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="discountValue" id="discountValueLabel">Discount (%)</label>
+                                    <div class="input-wrapper">
+                                        <i data-lucide="percent" id="discountIcon" style="left: 1rem; width: 16px; height: 16px;"></i>
+                                        <input type="number" id="discountValue" class="form-input" min="0" value="0" style="padding-left: 2.5rem;">
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="discountWarning" class="validation-warning" style="margin-top: 0;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Actions Card -->
+                    <div class="glass-card actions-card">
+                        <h2>
+                            <span class="card-header-icon"><i data-lucide="sliders"></i></span>
+                            Actions
+                        </h2>
+                        <button type="button" class="btn btn-primary" id="calculateBtn">
+                            <i data-lucide="calculator"></i>
+                            Calculate Fine
+                        </button>
+                        <button type="button" class="btn btn-secondary" id="resetBtn">
+                            <i data-lucide="refresh-cw"></i>
+                            Reset Dashboard
+                        </button>
+                        <button type="button" class="btn btn-download" id="downloadPdfBtn">
+                            <i data-lucide="file-down"></i>
+                            Download PDF Report
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Results Section -->
+            <section class="results-section" id="resultsSection">
+                <div class="glass-card">
+                    <h2>
+                        <span class="card-header-icon"><i data-lucide="bar-chart-3"></i></span>
+                        Calculation Summary & Results
+                    </h2>
+                    
+                    <div class="results-wrapper">
+                        <!-- Left: Table details -->
+                        <div>
+                            <h3 style="font-family: 'Outfit', sans-serif; font-size: 1.1rem; margin-bottom: 0.75rem;">Subject-wise Details</h3>
+                            <div class="results-table-container">
+                                <table class="results-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Subject</th>
+                                            <th style="text-align: center;">Attendance</th>
+                                            <th style="text-align: right;">Fine Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="resultsTableBody">
+                                        <!-- Dynamically filled -->
+                                    </tbody>
+                                    <tfoot id="resultsTableFoot" style="border-top: 2px solid var(--input-focus);">
+                                        <!-- Dynamically filled breakdown -->
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Right: KPI Total highlight -->
+                        <div style="display: flex; flex-direction: column; gap: 1.5rem; justify-content: center;">
+                            <div class="total-fine-card" id="totalFineCard">
+                                <span class="total-fine-label">Final Total Fine</span>
+                                <span class="total-fine-amount" id="totalFineAmount">₹0</span>
+                                <span class="total-fine-status" id="totalFineStatus">No Fine Applicable</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2026 Kishkinda University Students Portal. All rights reserved.</p>
+            <p>Developed by <strong>Students</strong></p>
+        </footer>
+    </div>
+
+    <!-- JS Logic -->
+    <script>
+        // Default seed subjects matching user requirements
+        const DEFAULT_SUBJECTS = [
+            { id: 'cns', name: 'Cryptography and Network Security', icon: 'shield-alert', attendance: 75 },
+            { id: 'ml', name: 'Machine Learning', icon: 'brain-circuit', attendance: 75 },
+            { id: 'cc', name: 'Cloud Computing with AWS', icon: 'cloud', attendance: 75 },
+            { id: 'rmipr', name: 'Research Methodology and Intellectual Property Rights', icon: 'file-text', attendance: 75 },
+            { id: 'proctor', name: 'Proctor', icon: 'users', attendance: 75 }
+        ];
+
+        // Active State
+        let subjects = JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
+        let currentCalculatedData = null;
+
+        // Load Lucide Icons
+        lucide.createIcons();
+
+        // Theme Toggle Handler
+        const themeToggle = document.getElementById('themeToggle');
+        const themeIcon = document.getElementById('themeIcon');
+        
+        // Initialize Theme from localStorage or browser settings
+        if (localStorage.getItem('theme') === 'dark' || (!localStorage.getItem('theme') && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+            themeIcon.setAttribute('data-lucide', 'sun');
+        } else {
+            document.documentElement.classList.remove('dark');
+            themeIcon.setAttribute('data-lucide', 'moon');
+        }
+        lucide.createIcons();
+
+        themeToggle.addEventListener('click', () => {
+            const isDark = document.documentElement.classList.toggle('dark');
+            if (isDark) {
+                localStorage.setItem('theme', 'dark');
+                themeIcon.setAttribute('data-lucide', 'sun');
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeIcon.setAttribute('data-lucide', 'moon');
+            }
+            lucide.createIcons();
+        });
+
+        // Compute Fine rules mapping
+        function calculateSubjectFine(attendance) {
+            if (attendance === null || isNaN(attendance)) return 0;
+            if (attendance >= 85) return 0;
+            if (attendance >= 80) return 100;
+            if (attendance >= 75) return 200;
+            if (attendance >= 70) return 300;
+            if (attendance >= 65) return 400;
+            if (attendance >= 60) return 500;
+            if (attendance > 50 && attendance < 60) return 600;
+            return 750;
+        }
+
+        // Get status badge metadata
+        function getBadgeInfo(attendance) {
+            if (attendance >= 85) return { text: 'Excellent', class: 'badge-excellent' };
+            if (attendance >= 75) return { text: 'Good', class: 'badge-excellent' };
+            if (attendance >= 60) return { text: 'Warning', class: 'badge-warning' };
+            return { text: 'Critical', class: 'badge-critical' };
+        }
+
+        // Progress color maps
+        function getProgressBarColor(attendance) {
+            if (attendance >= 85) return 'var(--clr-success)';
+            if (attendance >= 75) return 'var(--clr-info)';
+            if (attendance >= 60) return 'var(--clr-warning)';
+            return 'var(--clr-danger)';
+        }
+
+        // --- Custom Subject Addition ---
+        const showAddSubjectBtn = document.getElementById('showAddSubjectBtn');
+        const addSubjectForm = document.getElementById('addSubjectForm');
+        const newSubjectName = document.getElementById('newSubjectName');
+        const saveSubjectBtn = document.getElementById('saveSubjectBtn');
+        const cancelSubjectBtn = document.getElementById('cancelSubjectBtn');
+        const subjectError = document.getElementById('subjectError');
+
+        showAddSubjectBtn.addEventListener('click', () => {
+            addSubjectForm.style.display = 'block';
+            newSubjectName.focus();
+            showAddSubjectBtn.style.display = 'none';
+        });
+
+        cancelSubjectBtn.addEventListener('click', () => {
+            addSubjectForm.style.display = 'none';
+            newSubjectName.value = '';
+            subjectError.style.display = 'none';
+            showAddSubjectBtn.style.display = 'flex';
+        });
+
+        saveSubjectBtn.addEventListener('click', () => {
+            const name = newSubjectName.value.trim();
+            if (!name) {
+                subjectError.style.display = 'block';
+                return;
+            }
+            
+            subjectError.style.display = 'none';
+            const subId = 'custom_' + Date.now();
+            subjects.push({
+                id: subId,
+                name: name,
+                icon: 'book-open',
+                attendance: 75
+            });
+            
+            renderSubjects();
+            
+            addSubjectForm.style.display = 'none';
+            newSubjectName.value = '';
+            showAddSubjectBtn.style.display = 'flex';
+        });
+
+        // Global Delete handler
+        window.deleteSubject = function(subId) {
+            subjects = subjects.filter(s => s.id !== subId);
+            renderSubjects();
+        };
+
+        // --- Inline Rename Subject Handlers ---
+        window.startEditSubject = function(subId) {
+            const subject = subjects.find(s => s.id === subId);
+            if (subject) {
+                // Cancel any other active edits first
+                subjects.forEach(s => s.isEditing = false);
+                
+                subject.isEditing = true;
+                renderSubjects();
+                
+                const input = document.getElementById(`edit-input-${subId}`);
+                if (input) {
+                    input.focus();
+                    input.select();
+                }
+            }
+        };
+
+        window.saveSubjectName = function(subId) {
+            const subject = subjects.find(s => s.id === subId);
+            const input = document.getElementById(`edit-input-${subId}`);
+            if (subject && input) {
+                const newName = input.value.trim();
+                if (newName) {
+                    subject.name = newName;
+                    subject.isEditing = false;
+                    renderSubjects();
+                } else {
+                    alert('Subject name cannot be empty.');
+                }
+            }
+        };
+
+        window.cancelEditSubject = function(subId) {
+            const subject = subjects.find(s => s.id === subId);
+            if (subject) {
+                subject.isEditing = false;
+                renderSubjects();
+            }
+        };
+
+        // --- Render Subject Cards ---
+        const subjectsContainer = document.getElementById('subjectsContainer');
+
+        function renderSubjects() {
+            subjectsContainer.innerHTML = '';
+            
+            subjects.forEach(sub => {
+                const card = document.createElement('div');
+                card.className = 'subject-card';
+                card.id = `card-${sub.id}`;
+                
+                const isEditing = sub.isEditing || false;
+                
+                if (isEditing) {
+                    card.innerHTML = `
+                        <div class="subject-info-row">
+                            <div class="subject-name-wrapper" style="width: 100%;">
+                                <span class="subject-icon"><i data-lucide="${sub.icon}"></i></span>
+                                <input type="text" class="form-input" id="edit-input-${sub.id}" value="${sub.name}" style="padding: 0.4rem 0.75rem; padding-left: 1rem; border-radius: 8px; font-size: 0.95rem; font-weight: 600; width: 100%; border: 1.5px solid var(--input-focus); color: var(--text-primary);">
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink:0;">
+                                <button type="button" class="edit-subject-btn" onclick="saveSubjectName('${sub.id}')" title="Save" style="background: rgba(16, 185, 129, 0.1); color: var(--clr-success);">
+                                    <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+                                </button>
+                                <button type="button" class="delete-subject-btn" onclick="cancelEditSubject('${sub.id}')" title="Cancel" style="background: rgba(239, 68, 68, 0.1); color: var(--clr-danger);">
+                                    <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="subject-input-control" style="opacity: 0.4; pointer-events: none;">
+                            <div class="slider-wrapper">
+                                <input type="range" class="range-slider" id="slider-${sub.id}" min="0" max="100" value="${sub.attendance}" disabled>
+                            </div>
+                            <div class="numeric-input-box">
+                                <input type="number" class="numeric-input" id="num-${sub.id}" min="0" max="100" value="${sub.attendance}" disabled>
+                            </div>
+                        </div>
+
+                        <div class="live-progress-bar-container" style="opacity: 0.4;">
+                            <div class="live-progress-bar" id="progress-${sub.id}"></div>
+                        </div>
+                        <div class="validation-warning" id="warning-${sub.id}">Attendance must be a number between 0 and 100.</div>
+                    `;
+                } else {
+                    card.innerHTML = `
+                        <div class="subject-info-row">
+                            <div class="subject-name-wrapper">
+                                <span class="subject-icon"><i data-lucide="${sub.icon}"></i></span>
+                                <span class="subject-name">${sub.name}</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-shrink:0;">
+                                <span class="subject-badge" id="badge-${sub.id}">Good</span>
+                                <span class="subject-fine-tag" id="tag-${sub.id}">
+                                    <i id="fineIconZero-${sub.id}" data-lucide="check-circle" class="fine-zero" style="width: 16px; height: 16px; display: inline-block;"></i>
+                                    <i id="fineIconHas-${sub.id}" data-lucide="alert-triangle" class="fine-has" style="width: 16px; height: 16px; display: none;"></i>
+                                    <span id="fineText-${sub.id}" class="fine-zero">₹0</span>
+                                </span>
+                                <button type="button" class="edit-subject-btn" onclick="startEditSubject('${sub.id}')" title="Rename Subject">
+                                    <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                                </button>
+                                <button type="button" class="delete-subject-btn" onclick="deleteSubject('${sub.id}')" title="Remove Subject">
+                                    <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="subject-input-control">
+                            <div class="slider-wrapper">
+                                <input type="range" class="range-slider" id="slider-${sub.id}" min="0" max="100" value="${sub.attendance}">
+                            </div>
+                            <div class="numeric-input-box">
+                                <input type="number" class="numeric-input" id="num-${sub.id}" min="0" max="100" placeholder="75" value="${sub.attendance}">
+                            </div>
+                        </div>
+
+                        <div class="live-progress-bar-container">
+                            <div class="live-progress-bar" id="progress-${sub.id}"></div>
+                        </div>
+                        <div class="validation-warning" id="warning-${sub.id}">Attendance must be a number between 0 and 100.</div>
+                    `;
+                }
+                
+                subjectsContainer.appendChild(card);
+                
+                setupSubjectListeners(sub.id);
+                updateSubjectVisuals(sub.id, sub.attendance);
+            });
+            
+            lucide.createIcons();
+            recalculateAll();
+        }
+
+        // Connect numeric/slider bindings
+        function setupSubjectListeners(subId) {
+            const slider = document.getElementById(`slider-${subId}`);
+            const numInput = document.getElementById(`num-${subId}`);
+            const editInput = document.getElementById(`edit-input-${subId}`);
+            
+            if (slider && numInput) {
+                slider.addEventListener('input', (e) => {
+                    const val = parseInt(e.target.value) || 0;
+                    numInput.value = val;
+                    
+                    const subject = subjects.find(s => s.id === subId);
+                    if (subject) subject.attendance = val;
+                    
+                    updateSubjectVisuals(subId, val);
+                });
+                
+                numInput.addEventListener('input', (e) => {
+                    const valStr = e.target.value.trim();
+                    const val = parseInt(valStr);
+                    const subject = subjects.find(s => s.id === subId);
+                    
+                    if (valStr === '' || isNaN(val) || val < 0 || val > 100) {
+                        if (subject) subject.attendance = null;
+                        updateSubjectVisuals(subId, null, true);
+                        return;
+                    }
+                    
+                    slider.value = val;
+                    if (subject) subject.attendance = val;
+                    updateSubjectVisuals(subId, val);
+                });
+            }
+            
+            if (editInput) {
+                editInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        saveSubjectName(subId);
+                    } else if (e.key === 'Escape') {
+                        cancelEditSubject(subId);
+                    }
+                });
+            }
+        }
+
+        // Live card visual calculations updates
+        function updateSubjectVisuals(subId, value, isInputInvalid = false) {
+            const slider = document.getElementById(`slider-${subId}`);
+            const numInput = document.getElementById(`num-${subId}`);
+            const progressBar = document.getElementById(`progress-${subId}`);
+            const badge = document.getElementById(`badge-${subId}`);
+            const fineText = document.getElementById(`fineText-${subId}`);
+            const iconZero = document.getElementById(`fineIconZero-${subId}`);
+            const iconHas = document.getElementById(`fineIconHas-${subId}`);
+            const warning = document.getElementById(`warning-${subId}`);
+
+            if (!slider || !numInput || !progressBar) return;
+
+            if (isInputInvalid) {
+                warning.style.display = 'block';
+                numInput.style.borderColor = 'var(--clr-danger)';
+                progressBar.style.width = '0%';
+                if (badge) badge.style.display = 'none';
+                recalculateAll();
+                return;
+            }
+            
+            warning.style.display = 'none';
+            numInput.style.borderColor = 'var(--input-border)';
+            if (badge) {
+                badge.style.display = 'inline-block';
+                const badgeInfo = getBadgeInfo(value);
+                badge.className = `subject-badge ${badgeInfo.class}`;
+                badge.textContent = badgeInfo.text;
+            }
+
+            progressBar.style.width = `${value}%`;
+            progressBar.style.backgroundColor = getProgressBarColor(value);
+
+            const fine = calculateSubjectFine(value);
+            if (fineText && iconZero && iconHas) {
+                if (fine === 0) {
+                    fineText.className = 'fine-zero';
+                    fineText.textContent = '₹0';
+                    iconZero.style.display = 'inline-block';
+                    iconHas.style.display = 'none';
+                } else {
+                    fineText.className = 'fine-has';
+                    fineText.textContent = `₹${fine}`;
+                    iconZero.style.display = 'none';
+                    iconHas.style.display = 'inline-block';
+                }
+            }
+            
+            recalculateAll();
+        }
+
+        // --- Discount Toggles ---
+        const enableDiscount = document.getElementById('enableDiscount');
+        const discountInputs = document.getElementById('discountInputs');
+        const discountType = document.getElementById('discountType');
+        const discountValue = document.getElementById('discountValue');
+        const discountValueLabel = document.getElementById('discountValueLabel');
+        const discountIcon = document.getElementById('discountIcon');
+        const discountWarning = document.getElementById('discountWarning');
+
+        enableDiscount.addEventListener('change', (e) => {
+            if (e.target.checked) {
+                discountInputs.style.display = 'flex';
+            } else {
+                discountInputs.style.display = 'none';
+                discountValue.value = 0;
+                discountWarning.style.display = 'none';
+            }
+            recalculateAll();
+        });
+
+        discountType.addEventListener('change', (e) => {
+            if (e.target.value === 'percentage') {
+                discountValueLabel.textContent = 'Discount (%)';
+                discountIcon.setAttribute('data-lucide', 'percent');
+                discountValue.max = 100;
+            } else {
+                discountValueLabel.textContent = 'Discount (₹)';
+                discountIcon.setAttribute('data-lucide', 'indian-rupee');
+                discountValue.removeAttribute('max');
+            }
+            lucide.createIcons();
+            validateDiscount();
+            recalculateAll();
+        });
+
+        discountValue.addEventListener('input', () => {
+            validateDiscount();
+            recalculateAll();
+        });
+
+        function validateDiscount() {
+            const isEnabled = enableDiscount.checked;
+            if (!isEnabled) {
+                discountWarning.style.display = 'none';
+                return true;
+            }
+            
+            const type = discountType.value;
+            const val = parseFloat(discountValue.value) || 0;
+            
+            if (val < 0) {
+                discountWarning.textContent = 'Discount value cannot be negative.';
+                discountWarning.style.display = 'block';
+                return false;
+            }
+            
+            if (type === 'percentage' && val > 100) {
+                discountWarning.textContent = 'Discount percentage cannot exceed 100%.';
+                discountWarning.style.display = 'block';
+                return false;
+            }
+            
+            discountWarning.style.display = 'none';
+            return true;
+        }
+
+        // --- Calculation Calculation engine ---
+        function recalculateAll() {
+            let subtotalFine = 0;
+            let isValid = true;
+            let subjectData = [];
+
+            // 1. Fetch values
+            subjects.forEach(sub => {
+                const numInput = document.getElementById(`num-${sub.id}`);
+                if (!numInput) return;
+                
+                const valStr = numInput.value.trim();
+                const val = parseInt(valStr);
+
+                if (valStr === '' || isNaN(val) || val < 0 || val > 100) {
+                    isValid = false;
+                } else {
+                    const fine = calculateSubjectFine(val);
+                    subtotalFine += fine;
+                    subjectData.push({
+                        name: sub.name,
+                        attendance: val,
+                        fine: fine
+                    });
+                }
+            });
+
+            // 2. Process discounts
+            let discountAmount = 0;
+            let finalFine = subtotalFine;
+            
+            if (isValid && enableDiscount.checked) {
+                const type = discountType.value;
+                const dVal = parseFloat(discountValue.value) || 0;
+                
+                if (dVal < 0) {
+                    isValid = false;
+                } else if (type === 'percentage') {
+                    if (dVal > 100) {
+                        isValid = false;
+                    } else {
+                        discountAmount = Math.round((subtotalFine * dVal) / 100);
+                    }
+                } else { // Flat
+                    if (dVal > subtotalFine) {
+                        discountWarning.textContent = `Discount cannot exceed the subtotal fine of ₹${subtotalFine}.`;
+                        discountWarning.style.display = 'block';
+                        isValid = false;
+                    } else {
+                        discountAmount = dVal;
+                        discountWarning.style.display = 'none';
+                    }
+                }
+                finalFine = Math.max(0, subtotalFine - discountAmount);
+            }
+
+            // 3. Update internal details states
+            if (isValid) {
+                document.getElementById('calculateBtn').removeAttribute('disabled');
+                currentCalculatedData = {
+                    subjects: subjectData,
+                    subtotalFine: subtotalFine,
+                    discountAmount: discountAmount,
+                    discountType: enableDiscount.checked ? discountType.value : null,
+                    discountValue: enableDiscount.checked ? (parseFloat(discountValue.value) || 0) : 0,
+                    totalFine: finalFine
+                };
+            } else {
+                document.getElementById('calculateBtn').setAttribute('disabled', 'true');
+                currentCalculatedData = null;
+            }
+        }
+
+        // --- Render Calculations outputs UI ---
+        const calculateBtn = document.getElementById('calculateBtn');
+        const resultsSection = document.getElementById('resultsSection');
+        const resultsTableBody = document.getElementById('resultsTableBody');
+        const resultsTableFoot = document.getElementById('resultsTableFoot');
+        const totalFineAmount = document.getElementById('totalFineAmount');
+        const totalFineStatus = document.getElementById('totalFineStatus');
+        const totalFineCard = document.getElementById('totalFineCard');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+
+        calculateBtn.addEventListener('click', () => {
+            // Check student inputs
+            const studentName = document.getElementById('studentName').value.trim();
+            const studentUsn = document.getElementById('studentUsn').value.trim();
+            const studentSemester = document.getElementById('studentSemester').value;
+            const studentBranch = document.getElementById('studentBranch').value;
+
+            if (!studentName || !studentUsn || !studentSemester || !studentBranch) {
+                document.getElementById('studentForm').reportValidity();
+                alert('Please fill out all Student Details (Name, USN, Semester, Branch) before calculating.');
+                return;
+            }
+
+            recalculateAll();
+
+            if (!currentCalculatedData) {
+                alert('Please resolve all validation errors first.');
+                return;
+            }
+
+            // Populate table body rows
+            resultsTableBody.innerHTML = '';
+            currentCalculatedData.subjects.forEach(sub => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${sub.name}</td>
+                    <td style="text-align: center; font-weight: 600;">${sub.attendance}%</td>
+                    <td style="text-align: right;" class="table-fine-amount ${sub.fine > 0 ? 'fine-has' : 'fine-zero'}">
+                        ₹${sub.fine}
+                    </td>
+                `;
+                resultsTableBody.appendChild(row);
+            });
+
+            // Populate table footer details breakdown
+            resultsTableFoot.innerHTML = '';
+            
+            if (currentCalculatedData.discountAmount > 0) {
+                // Subtotal Row
+                const subtotalRow = document.createElement('tr');
+                subtotalRow.innerHTML = `
+                    <td colspan="2" style="text-align: right; font-weight: 600; color: var(--text-muted);">Subtotal Fine:</td>
+                    <td style="text-align: right; font-weight: 700;">₹${currentCalculatedData.subtotalFine}</td>
+                `;
+                resultsTableFoot.appendChild(subtotalRow);
+                
+                // Discount Row
+                const label = currentCalculatedData.discountType === 'percentage' 
+                    ? `Discount (${currentCalculatedData.discountValue}%):` 
+                    : `Discount Applied:`;
+                const discountRow = document.createElement('tr');
+                discountRow.style.color = 'var(--clr-success)';
+                discountRow.innerHTML = `
+                    <td colspan="2" style="text-align: right; font-weight: 600;">${label}</td>
+                    <td style="text-align: right; font-weight: 700;">-₹${currentCalculatedData.discountAmount}</td>
+                `;
+                resultsTableFoot.appendChild(discountRow);
+            }
+            
+            // Final Row
+            const finalRow = document.createElement('tr');
+            finalRow.style.fontSize = '1.1rem';
+            finalRow.style.background = 'rgba(242, 193, 46, 0.06)';
+            finalRow.innerHTML = `
+                <td colspan="2" style="text-align: right; font-weight: 700; color: var(--text-secondary);">Final Total Fine:</td>
+                <td style="text-align: right; font-weight: 800; color: var(--text-secondary);">₹${currentCalculatedData.totalFine}</td>
+            `;
+            resultsTableFoot.appendChild(finalRow);
+
+            // Highlight display card updates
+            totalFineAmount.textContent = `₹${currentCalculatedData.totalFine}`;
+            
+            if (currentCalculatedData.totalFine > 0) {
+                totalFineCard.className = 'total-fine-card has-fine';
+                totalFineStatus.textContent = 'Fine Payment Required';
+                totalFineStatus.style.color = 'var(--clr-danger)';
+            } else {
+                totalFineCard.className = 'total-fine-card no-fine';
+                totalFineStatus.textContent = 'No Outstanding Fine';
+                totalFineStatus.style.color = 'var(--clr-success)';
+            }
+
+            // Show Results & download actions
+            resultsSection.style.display = 'block';
+            downloadPdfBtn.style.display = 'flex';
+
+            // Scroll down
+            resultsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+
+        // --- Reset Dashboard Handler ---
+        const resetBtn = document.getElementById('resetBtn');
+        resetBtn.addEventListener('click', () => {
+            document.getElementById('studentName').value = '';
+            document.getElementById('studentUsn').value = '';
+            document.getElementById('studentSemester').selectedIndex = 0;
+            document.getElementById('studentBranch').selectedIndex = 0;
+
+            subjects = JSON.parse(JSON.stringify(DEFAULT_SUBJECTS));
+
+            // Reset discount options
+            enableDiscount.checked = false;
+            discountInputs.style.display = 'none';
+            discountValue.value = 0;
+            discountType.value = 'percentage';
+            discountWarning.style.display = 'none';
+
+            renderSubjects();
+
+            resultsSection.style.display = 'none';
+            downloadPdfBtn.style.display = 'none';
+            currentCalculatedData = null;
+            
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+
+        // --- PDF Exporter Generation ---
+        downloadPdfBtn.addEventListener('click', () => {
+            const studentName = document.getElementById('studentName').value.trim();
+            const studentUsn = document.getElementById('studentUsn').value.trim();
+            const studentSemester = document.getElementById('studentSemester').value;
+            const studentBranch = document.getElementById('studentBranch').value;
+
+            if (!studentName || !studentUsn || !studentSemester || !studentBranch || !currentCalculatedData) {
+                alert('Fill student info and calculate fines before downloading.');
+                return;
+            }
+
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+
+            // 1. Accent Navy Top Band (Matches Crest Navy #0f2244)
+            doc.setFillColor(15, 34, 68);
+            doc.rect(0, 0, 210, 8, 'F');
+
+            // 2. University Letterhead Header
+            const logoImg = document.getElementById('universityLogo');
+            const hasLogo = logoImg && logoImg.complete && logoImg.naturalWidth !== 0;
+
+            if (hasLogo) {
+                // Render crest on the left
+                doc.addImage(logoImg, 'PNG', 15, 12, 18, 20); // 18x20mm
+                
+                // Left aligned titles
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(21);
+                doc.setTextColor(15, 34, 68); // Dark Navy Blue
+                doc.text("KISHKINDA UNIVERSITY", 37, 21);
+
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(8.5);
+                doc.setTextColor(107, 114, 128); // Muted grey
+                doc.text("Approved by AICTE | UGC Recognized | Accredited by NAAC", 37, 26);
+                
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11.5);
+                doc.setTextColor(191, 149, 13); // Accent Crest Gold
+                doc.text("ATTENDANCE EVALUATION & FINE REPORT", 37, 33);
+            } else {
+                // Centered fallback if logo fails to load
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(22);
+                doc.setTextColor(15, 34, 68); // Dark Navy Blue
+                doc.text("KISHKINDA UNIVERSITY", 105, 23, { align: "center" });
+
+                doc.setFont("helvetica", "normal");
+                doc.setFontSize(9);
+                doc.setTextColor(107, 114, 128); // Muted gray
+                doc.text("Approved by AICTE | UGC Recognized | Accredited by NAAC", 105, 28, { align: "center" });
+                
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(13);
+                doc.setTextColor(191, 149, 13); // Accent Crest Gold
+                doc.text("ATTENDANCE EVALUATION & FINE REPORT", 105, 36, { align: "center" });
+            }
+
+            // Horizontal Separator Line
+            doc.setDrawColor(209, 213, 219);
+            doc.setLineWidth(0.4);
+            doc.line(15, 42, 195, 42);
+
+            // 3. Student details box (rounded grey layout)
+            doc.setFillColor(248, 250, 252);
+            doc.setDrawColor(226, 232, 240);
+            doc.setLineWidth(0.3);
+            doc.roundedRect(15, 47, 180, 29, 3, 3, 'FD');
+
+            doc.setFontSize(10);
+            
+            // Col 1 details
+            doc.setTextColor(100, 116, 139);
+            doc.setFont("helvetica", "bold");
+            doc.text("Student Name:", 20, 53);
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "normal");
+            doc.text(studentName, 50, 53);
+
+            doc.setTextColor(100, 116, 139);
+            doc.setFont("helvetica", "bold");
+            doc.text("USN:", 120, 53);
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "normal");
+            doc.text(studentUsn, 135, 53);
+
+            // Col 2 details
+            doc.setTextColor(100, 116, 139);
+            doc.setFont("helvetica", "bold");
+            doc.text("Semester:", 20, 61);
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "normal");
+            doc.text(studentSemester + " Semester", 50, 61);
+
+            doc.setTextColor(100, 116, 139);
+            doc.setFont("helvetica", "bold");
+            doc.text("Branch:", 120, 61);
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "normal");
+            doc.text(studentBranch, 135, 61);
+
+            // Timestamp details
+            doc.setTextColor(100, 116, 139);
+            doc.setFont("helvetica", "bold");
+            doc.text("Generated On:", 20, 69);
+            doc.setTextColor(15, 23, 42);
+            doc.setFont("helvetica", "normal");
+            doc.text(new Date().toLocaleString('en-IN'), 50, 69);
+
+            // 4. Subject-wise table rendering
+            const tableRows = [];
+            currentCalculatedData.subjects.forEach(sub => {
+                tableRows.push([
+                    sub.name,
+                    `${sub.attendance}%`,
+                    sub.fine === 0 ? '₹0' : `₹${sub.fine}`
+                ]);
+            });
+
+            doc.autoTable({
+                startY: 83,
+                head: [['Subject Name', 'Attendance Percentage', 'Fine Amount']],
+                body: tableRows,
+                theme: 'grid',
+                headStyles: {
+                    fillColor: [15, 34, 68], // Navy
+                    textColor: [255, 255, 255],
+                    fontSize: 10,
+                    fontStyle: 'bold',
+                    halign: 'left'
+                },
+                columnStyles: {
+                    0: { cellWidth: 95, halign: 'left' },
+                    1: { cellWidth: 45, halign: 'center' },
+                    2: { cellWidth: 40, halign: 'right' }
+                },
+                styles: {
+                    font: 'helvetica',
+                    fontSize: 9,
+                    cellPadding: 4,
+                    lineColor: [226, 232, 240]
+                },
+                alternateRowStyles: {
+                    fillColor: [248, 250, 252]
+                }
+            });
+
+            // 5. Total Highlight Summary card
+            const finalY = doc.lastAutoTable.finalY + 8;
+            
+            // Check page overflow
+            let summaryHeight = 20;
+            if (currentCalculatedData.discountAmount > 0) {
+                summaryHeight = 32;
+            }
+
+            if (finalY + summaryHeight + 35 > 280) {
+                doc.addPage();
+                // Redraw top border band
+                doc.setFillColor(15, 34, 68);
+                doc.rect(0, 0, 210, 8, 'F');
+            }
+
+            const cardX = 120;
+            const cardY = doc.lastAutoTable.finalY + 8 + summaryHeight + 35 > 280 ? 15 : finalY;
+            const cardWidth = 75;
+
+            if (currentCalculatedData.totalFine > 0) {
+                doc.setFillColor(254, 242, 242); // Light red
+                doc.setDrawColor(248, 113, 113); // Red border
+            } else {
+                doc.setFillColor(254, 253, 243); // Soft Gold tint (#fefdf3)
+                doc.setDrawColor(242, 193, 46); // Gold border
+            }
+            
+            doc.setLineWidth(0.4);
+            doc.roundedRect(cardX, cardY, cardWidth, summaryHeight, 2, 2, 'FD');
+
+            doc.setFontSize(9);
+            
+            if (currentCalculatedData.discountAmount > 0) {
+                // Print Subtotal
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(100, 116, 139);
+                doc.text("SUBTOTAL FINE:", cardX + 5, cardY + 7);
+                doc.setFont("helvetica", "normal");
+                doc.text(`₹ ${currentCalculatedData.subtotalFine}`, cardX + 70, cardY + 7, { align: 'right' });
+                
+                // Print Discount
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(16, 185, 129); // Green
+                const discountLabelStr = currentCalculatedData.discountType === 'percentage'
+                    ? `DISCOUNT (${currentCalculatedData.discountValue}%):`
+                    : "DISCOUNT (FLAT):";
+                doc.text(discountLabelStr, cardX + 5, cardY + 15);
+                doc.setFont("helvetica", "normal");
+                doc.text(`-₹ ${currentCalculatedData.discountAmount}`, cardX + 70, cardY + 15, { align: 'right' });
+                
+                // Fine line
+                doc.setDrawColor(226, 232, 240);
+                doc.line(cardX + 3, cardY + 20, cardX + cardWidth - 3, cardY + 20);
+                
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11);
+                doc.setTextColor(15, 34, 68);
+                doc.text("FINAL TOTAL FINE:", cardX + 5, cardY + 27);
+                
+                doc.setFontSize(13);
+                if (currentCalculatedData.totalFine > 0) {
+                    doc.setTextColor(220, 38, 38);
+                } else {
+                    doc.setTextColor(191, 149, 13); // Gold
+                }
+                doc.text(`₹ ${currentCalculatedData.totalFine}`, cardX + 70, cardY + 27, { align: 'right' });
+            } else {
+                // Print default summary card
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(10);
+                doc.setTextColor(71, 85, 105);
+                doc.text("TOTAL OUTSTANDING FINE:", cardX + 5, cardY + 8);
+
+                doc.setFontSize(13);
+                if (currentCalculatedData.totalFine > 0) {
+                    doc.setTextColor(220, 38, 38);
+                } else {
+                    doc.setTextColor(191, 149, 13); // Gold text
+                }
+                doc.text(`₹ ${currentCalculatedData.totalFine}`, cardX + 70, cardY + 14, { align: 'right' });
+            }
+
+            // 6. University Note details & signature lines
+            const footerNoteY = cardY + summaryHeight + 8;
+            doc.setFont("helvetica", "italic");
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
+            doc.text("* Note: This document serves as an official academic registration fine assessment statement.", 15, footerNoteY);
+            doc.text("  Fines must be cleared at the administration counter to download the regular hall ticket.", 15, footerNoteY + 4);
+
+            doc.setDrawColor(226, 232, 240);
+            doc.line(15, footerNoteY + 10, 195, footerNoteY + 10);
+
+            // Authorized signature lines
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(9);
+            doc.setTextColor(71, 85, 105);
+            doc.text("Student Signature", 30, footerNoteY + 23);
+            doc.text("Controller of Examinations", 145, footerNoteY + 23);
+
+            doc.setDrawColor(148, 163, 184);
+            doc.setLineDashPattern([1, 1], 0);
+            doc.line(20, footerNoteY + 18, 70, footerNoteY + 18);
+            doc.line(140, footerNoteY + 18, 190, footerNoteY + 18);
+
+            // Report footer details
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
+            doc.text("Kishkinda University Portal | Automated Registration Fine Statement", 105, 288, { align: 'center' });
+
+            // 7. Save file matching student USN
+            const formattedFilename = `KU_Fine_Statement_${studentUsn || 'Report'}.pdf`;
+            doc.save(formattedFilename);
+        });
+
+        // Initial render
+        renderSubjects();
+    </script>
+</body>
+</html>
